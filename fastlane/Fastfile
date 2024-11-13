@@ -212,7 +212,7 @@ platform :ios do
         end,
       export_method: ENV['EXPORT_METHOD'],
       export_options: use_export_options ? ENV['EXPORT_OPTIONS'] : nil,
-      skip_profile_detection: use_export_options,
+      skip_profile_detection: !profile_hash['provisioningProfiles'].empty?,
       sdk: use_build_sdk ? ENV['BUILD_SDK'] : nil,
       destination: use_build_destination ? ENV['BUILD_DESTINATION'] : nil,
       build_path: use_build_path ? ENV['BUILD_PATH'] : nil
