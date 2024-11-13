@@ -1,4 +1,4 @@
-name: "iOS Build Release Action"
+name: "@muhamad-rizki/ios-build-action"
 description: "Build iOS project (.xcodeproj, .xcworkspace), and export ipa with custom entitlements"
 inputs:
   p12-key-base64:
