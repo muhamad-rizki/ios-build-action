@@ -101,6 +101,7 @@ platform :ios do
     )
 
     use_export_options = !ENV['EXPORT_OPTIONS'].empty?
+    skip_profile_detection = use_export_options
 
     if use_export_options
       doc =
@@ -118,6 +119,7 @@ platform :ios do
           profile_hash[profile.text] = profile.next_element.text
         end
       end
+      skip_profile_detection = !profile_hash['provisioningProfiles'].empty?
     end
     project =
       Xcodeproj::Project.open(
@@ -212,7 +214,7 @@ platform :ios do
         end,
       export_method: ENV['EXPORT_METHOD'],
       export_options: use_export_options ? ENV['EXPORT_OPTIONS'] : nil,
-      skip_profile_detection: !profile_hash['provisioningProfiles'].empty?,
+      skip_profile_detection: skip_profile_detection,
       sdk: use_build_sdk ? ENV['BUILD_SDK'] : nil,
       destination: use_build_destination ? ENV['BUILD_DESTINATION'] : nil,
       build_path: use_build_path ? ENV['BUILD_PATH'] : nil
