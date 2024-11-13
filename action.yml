@@ -1,5 +1,7 @@
 name: "@muhamad-rizki/ios-build-action"
 description: "Build iOS project (.xcodeproj, .xcworkspace), and export ipa with custom entitlements"
+icon: box
+color: orange
 inputs:
   p12-key-base64:
     description: "Base64 encoded p12 key"
