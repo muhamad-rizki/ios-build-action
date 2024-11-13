@@ -119,7 +119,7 @@ platform :ios do
           profile_hash[profile.text] = profile.next_element.text
         end
       end
-      skip_profile_detection = defined?(profile_hash['provisioningProfiles']) && !profile_hash['provisioningProfiles'].empty?
+      skip_profile_detection = profile_hash.key?("provisioningProfiles")
     end
     project =
       Xcodeproj::Project.open(
