@@ -102,6 +102,7 @@ platform :ios do
 
     use_export_options = !ENV['EXPORT_OPTIONS'].empty?
     skip_profile_detection = use_export_options
+    exportplist = use_export_options ? ENV['EXPORT_OPTIONS'].split(/\R/).map(&:strip).reject(&:empty?).first : nil
 
     if use_export_options
       profile_hash = {}
@@ -120,6 +121,41 @@ platform :ios do
         end
       end
       skip_profile_detection = profile_hash.key?("provisioningProfiles")
+
+      # Merge Plist
+      plist_files = ENV['EXPORT_OPTIONS'].split(/\R/).map(&:strip).reject(&:empty?)    
+      merged_plist = plist_files.reduce(nil) do |merged, plist_path|
+        resolved_path = Pathname.new(plist_path).absolute? ? plist_path : File.expand_path("../#{plist_path}")
+        unless File.exist?(resolved_path)
+          puts "Warning: File not found - #{resolved_path}"
+          next merged
+        end
+        current_plist = Plist.parse_xml(resolved_path)
+        unless current_plist
+          puts "Error: Failed to parse plist file - #{resolved_path}"
+          next merged
+        end
+    
+        merged ||= {}
+        merged.merge(current_plist) do |key, oldval, newval|
+          if oldval.is_a?(Hash) && newval.is_a?(Hash)
+            oldval.merge(newval)
+          elsif oldval.is_a?(Array) && newval.is_a?(Array)
+            oldval | newval
+          else
+            newval
+          end
+        end
+      end
+    
+      if merged_plist
+        File.open(exportplist, 'w') do |f|
+          f.write(Plist::Emit.dump(merged_plist))
+        end
+        puts "Plists merged successfully into #{output_file}"
+      else
+        puts "Error: No valid plist files were found to merge."
+      end
     end
     project =
       Xcodeproj::Project.open(
@@ -213,7 +249,7 @@ platform :ios do
           nil
         end,
       export_method: ENV['EXPORT_METHOD'],
-      export_options: use_export_options ? ENV['EXPORT_OPTIONS'] : nil,
+      export_options: use_export_options ? exportplist : nil,
       skip_profile_detection: skip_profile_detection,
       sdk: use_build_sdk ? ENV['BUILD_SDK'] : nil,
       destination: use_build_destination ? ENV['BUILD_DESTINATION'] : nil,
