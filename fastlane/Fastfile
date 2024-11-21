@@ -114,12 +114,12 @@ platform :ios do
         end
         doc = REXML::Document.new(File.read(resolved_path))
         doc.elements.each('//plist/dict/key') do |element|
-          next if element.text != 'provisioningProfiles'
           element.next_element.elements.each('key') do |profile|
             profile_hash[profile.text] = profile.next_element.text
           end
         end
       end
+      pp profile_hash
       skip_profile_detection = profile_hash.key?("provisioningProfiles")
 
       # Merge Plist
