@@ -152,7 +152,7 @@ platform :ios do
         File.open(exportplist, 'w') do |f|
           f.write(Plist::Emit.dump(merged_plist))
         end
-        puts "Plists merged successfully into #{output_file}"
+        puts "Plists merged successfully into #{exportplist}"
       else
         puts "Error: No valid plist files were found to merge."
       end
