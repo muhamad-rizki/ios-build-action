@@ -105,17 +105,13 @@ platform :ios do
 
     if use_export_options
       profile_hash = {}
-      ENV['EXPORT_OPTIONS'].split(/\R/).each.with_index(
-        1
-      ) do |optFile, index|
-        doc =
-          REXML::Document.new(
-            if Pathname(optFile).absolute?
-              File.read(optFile)
-            else
-              File.read("../#{optFile}")
-            end
-          )
+      ENV['EXPORT_OPTIONS'].split(/\R/).each.with_index(1) do |optFile, index|
+        resolved_path = Pathname(optFile).absolute? ? optFile : "../#{optFile}"
+        unless File.exist?(resolved_path)
+          puts "Warning: File not found - #{resolved_path}"
+          next
+        end
+        doc = REXML::Document.new(File.read(resolved_path))
         doc.elements.each('//plist/dict/key') do |element|
           next if element.text != 'provisioningProfiles'
           element.next_element.elements.each('key') do |profile|
