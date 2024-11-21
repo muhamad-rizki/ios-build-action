@@ -104,19 +104,23 @@ platform :ios do
     skip_profile_detection = use_export_options
 
     if use_export_options
-      doc =
-        REXML::Document.new(
-          if Pathname(ENV['EXPORT_OPTIONS']).absolute?
-            File.read(ENV['EXPORT_OPTIONS'])
-          else
-            File.read("../#{ENV['EXPORT_OPTIONS']}")
-          end
-        )
       profile_hash = {}
-      doc.elements.each('//plist/dict/key') do |element|
-        next if element.text != 'provisioningProfiles'
-        element.next_element.elements.each('key') do |profile|
-          profile_hash[profile.text] = profile.next_element.text
+      ENV['EXPORT_OPTIONS'].split(/\R/).each.with_index(
+        1
+      ) do |optFile, index|
+        doc =
+          REXML::Document.new(
+            if Pathname(optFile).absolute?
+              File.read(optFile)
+            else
+              File.read("../#{optFile}")
+            end
+          )
+        doc.elements.each('//plist/dict/key') do |element|
+          next if element.text != 'provisioningProfiles'
+          element.next_element.elements.each('key') do |profile|
+            profile_hash[profile.text] = profile.next_element.text
+          end
         end
       end
       skip_profile_detection = profile_hash.key?("provisioningProfiles")
