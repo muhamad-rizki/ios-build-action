@@ -102,7 +102,6 @@ platform :ios do
 
     use_export_options = !ENV['EXPORT_OPTIONS'].empty?
     skip_profile_detection = false
-    exportplist = use_export_options ? ENV['EXPORT_OPTIONS'].split(/\R/).map(&:strip).reject(&:empty?).first : nil
 
     if use_export_options
       # Merge Plist
@@ -132,14 +131,10 @@ platform :ios do
       end
     
       if merged_plist
-        File.open(exportplist, 'w') do |f|
-          f.write(Plist::Emit.dump(merged_plist))
-        end
-        puts "FL DEBUG: Plists merged successfully into #{exportplist}"
+        puts "FL DEBUG: Plists merged successfully"
         puts merged_plist
 
-        # put to profile_hash
-        profile_hash = Plist.parse_xml(exportplist)
+        profile_hash = merged_plist
         puts "FL DEBUG: Profile Hash"
         pp profile_hash
         skip_profile_detection = profile_hash.key?("provisioningProfiles")
@@ -241,7 +236,7 @@ platform :ios do
           nil
         end,
       export_method: ENV['EXPORT_METHOD'],
-      export_options: use_export_options ? exportplist : nil,
+      export_options: use_export_options ? profile_hash : nil,
       skip_profile_detection: skip_profile_detection,
       sdk: use_build_sdk ? ENV['BUILD_SDK'] : nil,
       destination: use_build_destination ? ENV['BUILD_DESTINATION'] : nil,
