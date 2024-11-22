@@ -102,13 +102,13 @@ platform :ios do
 
     use_export_options = !ENV['EXPORT_OPTIONS'].empty?
     skip_profile_detection = false
-    exportplist = use_export_options ? "./merged.plist" : nil
+    exportplist = use_export_options ? ENV['EXPORT_OPTIONS'].split(/\R/).map(&:strip).reject(&:empty?).first : nil
 
     if use_export_options
       # Merge Plist
       plist_files = ENV['EXPORT_OPTIONS'].split(/\R/).map(&:strip).reject(&:empty?)    
       merged_plist = plist_files.reduce(nil) do |merged, plist_path|
-        resolved_path = plist_path
+        resolved_path = Pathname.new(plist_path).absolute? ? plist_path : File.expand_path("../#{plist_path}")
         unless File.exist?(resolved_path)
           puts "FL DEBUG Warning: File not found - #{resolved_path}"
           next merged
