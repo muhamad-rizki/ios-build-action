@@ -101,46 +101,21 @@ platform :ios do
     )
 
     use_export_options = !ENV['EXPORT_OPTIONS'].empty?
-    skip_profile_detection = use_export_options
-    exportplist = use_export_options ? ENV['EXPORT_OPTIONS'].split(/\R/).map(&:strip).reject(&:empty?).first : nil
+    skip_profile_detection = false
+    exportplist = use_export_options ? './merged.plist' : nil
 
     if use_export_options
-      profile_hash = {}
-      ENV['EXPORT_OPTIONS'].split(/\R/).each.with_index(1) do |optFile, index|
-        resolved_path = Pathname(optFile).absolute? ? optFile : "../#{optFile}"
-        unless File.exist?(resolved_path)
-          puts "Warning: File not found - #{resolved_path}"
-          next
-        end
-        doc = REXML::Document.new(File.read(resolved_path))
-        doc.elements.each('//plist/dict/key') do |element|
-          if element.text == 'provisioningProfiles'
-            skip_profile_detection = true
-            provisioning_profiles = {}
-            element.next_element.elements.each('key') do |profile|
-              provisioning_profiles[profile.text] = profile.next_element.text
-            end
-            profile_hash['provisioningProfiles'] = provisioning_profiles
-          else
-            element.next_element.elements.each('key') do |profile|
-              profile_hash[profile.text] = profile.next_element.text
-            end
-          end
-        end
-      end
-      pp profile_hash
-
       # Merge Plist
       plist_files = ENV['EXPORT_OPTIONS'].split(/\R/).map(&:strip).reject(&:empty?)    
       merged_plist = plist_files.reduce(nil) do |merged, plist_path|
-        resolved_path = Pathname.new(plist_path).absolute? ? plist_path : File.expand_path("../#{plist_path}")
+        resolved_path = plist_path
         unless File.exist?(resolved_path)
-          puts "Warning: File not found - #{resolved_path}"
+          puts "FL DEBUG Warning: File not found - #{resolved_path}"
           next merged
         end
         current_plist = Plist.parse_xml(resolved_path)
         unless current_plist
-          puts "Error: Failed to parse plist file - #{resolved_path}"
+          puts "FL DEBUG Error: Failed to parse plist file - #{resolved_path}"
           next merged
         end
     
@@ -160,7 +135,14 @@ platform :ios do
         File.open(exportplist, 'w') do |f|
           f.write(Plist::Emit.dump(merged_plist))
         end
-        puts "Plists merged successfully into #{exportplist}"
+        puts "FL DEBUG: Plists merged successfully into #{exportplist}"
+        puts merged_plist
+
+        # put to profile_hash
+        profile_hash = Plist.parse_xml(exportplist)
+        puts "FL DEBUG: Profile Hash"
+        pp profile_hash
+        skip_profile_detection = profile_hash.key?("provisioningProfiles")
       else
         puts "Error: No valid plist files were found to merge."
       end
@@ -188,9 +170,11 @@ platform :ios do
           'PRODUCT_BUNDLE_IDENTIFIER'
         )
       configuration.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = app_identifier
-      if use_export_options && !profile_hash[app_identifier].nil?
+      puts "FL DEBUG: App Identifier"
+      puts app_identifier
+      if use_export_options && !skip_profile_detection && !profile_hash["provisioningProfiles"][app_identifier].nil?
         configuration.build_settings['PROVISIONING_PROFILE_SPECIFIER'] =
-          profile_hash[app_identifier]
+          profile_hash["provisioningProfiles"][app_identifier]
       end
     end
     project.save
