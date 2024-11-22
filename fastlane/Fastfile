@@ -172,7 +172,7 @@ platform :ios do
       configuration.build_settings['PRODUCT_BUNDLE_IDENTIFIER'] = app_identifier
       puts "FL DEBUG: App Identifier"
       puts app_identifier
-      if use_export_options && !skip_profile_detection && !profile_hash["provisioningProfiles"][app_identifier].nil?
+      if use_export_options && skip_profile_detection
         configuration.build_settings['PROVISIONING_PROFILE_SPECIFIER'] =
           profile_hash["provisioningProfiles"][app_identifier]
       end
