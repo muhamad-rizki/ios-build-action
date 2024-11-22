@@ -102,7 +102,7 @@ platform :ios do
 
     use_export_options = !ENV['EXPORT_OPTIONS'].empty?
     skip_profile_detection = false
-    exportplist = use_export_options ? './merged.plist' : nil
+    exportplist = use_export_options ? "./merged.plist" : nil
 
     if use_export_options
       # Merge Plist
