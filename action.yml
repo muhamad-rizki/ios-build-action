@@ -120,6 +120,14 @@ inputs:
     description: 'Custom Keychain Name'
     required: false
     default: "ios-build.keychain"
+  resign:
+    description: 'Run Resign command only'
+    required: false
+    default: false
+  ipa-path:
+    description: 'IPA Path to resign'
+    required: false
+    default: ""
 runs:
   using: "node20"
   main: "dist/index.js"
