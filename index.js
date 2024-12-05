@@ -68,7 +68,7 @@ async function run() {
     process.env.CUSTOM_KEYCHAIN_NAME = core.getInput('custom-keychain-name');
     process.env.IPA_PATH = core.getInput('ipa-path');
 
-    if(!core.getInput('resign')) {
+    if(!core.getBooleanInput('resign')) {
       // Execute build.sh
       await exec.exec(`bash ${__dirname}/../build.sh`);
     } else {
