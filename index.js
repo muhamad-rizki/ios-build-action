@@ -67,8 +67,13 @@ async function run() {
     process.env.BUILD_PATH = core.getInput('build-path');
     process.env.CUSTOM_KEYCHAIN_NAME = core.getInput('custom-keychain-name');
 
-    // Execute build.sh
-    await exec.exec(`bash ${__dirname}/../build.sh`);
+    if(!core.getInput('resign')) {
+      // Execute build.sh
+      await exec.exec(`bash ${__dirname}/../build.sh`);
+    } else {
+      // Execute resign.sh
+      await exec.exec(`bash ${__dirname}/../resign.sh`);
+    }
   } catch (error) {
     core.setFailed(error.message);
   }

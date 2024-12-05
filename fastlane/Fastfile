@@ -1,7 +1,7 @@
 default_platform(:ios)
 
 platform :ios do
-  desc 'Export ipa'
+  desc 'Export / Resign ipa'
   lane :export_ipa do
     decode_file
 
@@ -241,6 +241,74 @@ platform :ios do
       sdk: use_build_sdk ? ENV['BUILD_SDK'] : nil,
       destination: use_build_destination ? ENV['BUILD_DESTINATION'] : nil,
       build_path: use_build_path ? ENV['BUILD_PATH'] : nil
+    )
+
+    delete_keychain(name: keychain_name)
+  end
+
+  lane :resign_ipa do
+    decode_file
+
+    keychain_password = SecureRandom.uuid
+    keychain_name = nil
+    if !ENV['CUSTOM_KEYCHAIN_NAME'].empty?
+      keychain_name = ENV['CUSTOM_KEYCHAIN_NAME']
+    else
+      keychain_name = 'ios-build.keychain'
+    end
+
+    ENV["FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT"] = "120"
+
+    create_keychain(
+      name: keychain_name,
+      password: keychain_password,
+      default_keychain: true,
+      unlock: true,
+      timeout: 3600
+    )
+
+    if @is_split_cer
+      import_certificate(
+        certificate_path:
+          if !ENV['P12_KEY_PATH'].empty?
+            ENV['P12_KEY_PATH']
+          else
+            'ios-build-key.p12'
+          end,
+        certificate_password: ENV['CERTIFICATE_PASSWORD'],
+        keychain_name: keychain_name,
+        keychain_password: keychain_password,
+        log_output: true
+      )
+      import_certificate(
+        certificate_path:
+          if !ENV['P12_CER_PATH'].empty?
+            ENV['P12_CER_PATH']
+          else
+            'ios-build-key.cer'
+          end,
+        certificate_password: ENV['CERTIFICATE_PASSWORD'],
+        keychain_name: keychain_name,
+        keychain_password: keychain_password,
+        log_output: true
+      )
+    else
+      import_certificate(
+        certificate_path:
+          !ENV['P12_PATH'].empty? ? ENV['P12_PATH'] : 'ios-build.p12',
+        certificate_password: ENV['CERTIFICATE_PASSWORD'],
+        keychain_name: keychain_name,
+        keychain_password: keychain_password,
+        log_output: true
+      )
+    end
+
+    @profiles.each { |profile| install_provisioning_profile(path: profile) }
+    
+    resign(
+      ipa: ENV['IPA_PATH'],
+      signing_identity: ENV['CODE_SIGNING_IDENTITY'],
+      provisioning_profile: ENV['MOBILEPROVISION_PATH']
     )
 
     delete_keychain(name: keychain_name)
