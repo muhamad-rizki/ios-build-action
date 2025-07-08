@@ -128,6 +128,10 @@ inputs:
     description: 'IPA Path to resign'
     required: false
     default: ""
+  xcode-path:
+    description: 'Custom XCode Path'
+    required: false
+    default: ""
 runs:
   using: "node20"
   main: "dist/index.js"
